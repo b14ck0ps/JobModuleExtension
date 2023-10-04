@@ -17,24 +17,24 @@ pageextension 50800 "Job Planning Lines Extension" extends "Job Planning Lines"
                     Promoted = true;
                     PromotedCategory = Process;
                     PromotedIsBig = true;
-                    Caption = '&Calculate';
-                    Ellipsis = true;
+                    Caption = '&Calculate Amount';
                     Image = Calculate;
                     ToolTip = 'Calculate the job planning lines';
 
                     trigger OnAction()
                     var
-                        "G/L Entry": Record "G/L Entry";
+                        Jobline: Record "Job Planning Line";
                         GL_AmountProcess: Report "G/L Amount Process";
                     begin
-                        "G/L Entry".SetRange("G/L Account No.", Rec."No.");
-                        if "G/L Entry".FindFirst() then
-                            GL_AmountProcess.SetTableView("G/L Entry");
+                        Jobline.SetRange("Job No.", Rec."Job No.");
+                        Jobline.SetRange("Job Task No.", Rec."Job Task No.");
+
+                        if Jobline.FindFirst() then
+                            GL_AmountProcess.SetTableView(Jobline);
                         GL_AmountProcess.RunModal();
                         TotalAmount := GL_AmountProcess.GetTotalAmount();
 
                         Rec."Unit Cost" := TotalAmount;
-
                     end;
                 }
             }

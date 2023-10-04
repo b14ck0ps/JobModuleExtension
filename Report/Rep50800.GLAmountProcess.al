@@ -6,17 +6,33 @@ report 50800 "G/L Amount Process"
     ProcessingOnly = true;
     dataset
     {
-        dataitem(GLEntry; "G/L Entry")
+        dataitem("Job Planning Line"; "Job Planning Line")
         {
-            trigger OnAfterGetRecord()
-            begin
-                TotalAmount += GLEntry.Amount;
-            end;
+            dataitem(GLEntry; "G/L Entry")
+            {
+                DataItemLink = "G/L Account No." = FIELD("No.");
+                trigger OnPreDataItem()
+                begin
+                    if FirstPostingDate <> 0D then
+                        GLEntry.SETRANGE("Posting Date", FirstPostingDate, LastPostingDate);
+                end;
+
+                trigger OnAfterGetRecord()
+                begin
+                    TotalAmount += GLEntry.Amount;
+                end;
+
+                trigger OnPostDataItem()
+                begin
+                    TotalAmount := TotalAmount / Days;
+                    "Job Planning Line".Validate("Unit Cost", TotalAmount);
+                    "Job Planning Line".Modify(true);
+                end;
+            }
 
             trigger OnPreDataItem()
+
             begin
-                if FirstPostingDate <> 0D then
-                    GLEntry.SETRANGE("Posting Date", FirstPostingDate, LastPostingDate);
                 Days := LastPostingDate - FirstPostingDate;
             end;
         }
@@ -45,7 +61,7 @@ report 50800 "G/L Amount Process"
 
     trigger OnPostReport()
     begin
-        TotalAmount := TotalAmount / Days;
+        // TotalAmount := TotalAmount / Days;
     end;
 
     var
